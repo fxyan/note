@@ -1,16 +1,16 @@
-'''
-	python 函数的一些坑:
-		可变对象不可变对象
-			a = 1
-			def fun(a):
-				a = 2
-				print('函数a的值', a)
-			fun(a)
-			print(a)
+"""
+python 函数的一些坑:
+	可变对象不可变对象
+		a = 1
+		def fun(a):
+			a = 2
+			print('函数a的值', a)
+		fun(a)
+		print(a)
 
-			输出:
-				函数a的值 2
-				1
+		输出:
+			函数a的值 2
+			1
 
 			b = []
 			def fun1(b):
@@ -71,7 +71,7 @@
 				下次运行的时候我们是从上次中断的地方从新开始。
 				假设for 10000000 是要先将10000000这个建立成一个数组然后再进行循环，
 				但是使用生成器就不需要了 每次需要数据的时候再跳进去运行
-'''
+"""
 '''
 	iterator:
 		iter iter(obj) = obj.__iter__()
@@ -92,27 +92,25 @@
 				except StopIteration:
 					break
 '''
-class Pow2(object):
-	def __init__(self, num):
-		self.num = num
-		self.n = 0
-
-	def __iter__(self):
-		self.n = 0
-		return self
-
-	def __next__(self):
-		if self.n < self.num:
-			self.n += 1
-            return 2 ** self.n
-        else:
-        raise StopIteration
+# class Pow2(object):
+# 	def __init__(self, num):
+# 		self.num = num
+# 		self.n = 0
+#
+# 	def __iter__(self):
+# 		self.n = 0
+# 		return self
+#
+# 	def __next__(self):
+# 		if self.n < self.num:
+# 			self.n += 1
+#             return 2 ** self.n
+#         else:
+#         raise StopIteration
 
 
 '''
 """
-
-
 	class methed, instance method, static method:
 		instance method:
 			实例对象: self就是实例对象的绑定
@@ -120,24 +118,28 @@ class Pow2(object):
 			一个工具对象其实放在那里都是可以的但是这个为了严谨性所以放在使用到他的类中
 		class method:
 			和class绑定的一个方法
+		类方法实例方法静态方法都可以被实例对象调用，区别是类方法传入的是类的名称
 		实例:
 
 '''
 # class A(object):
-# 	def foo(self):
-# 		print('instance method')
+#     def __init__(self, a):
+#         self.a = a
 #
-# 	@classmethod
-# 	def c_foo(cls):
-# 		print('class method')
+#     def foo(self):
+#         print('instance method')
 #
-# 	@staticmethod
-# 	def s_foo():
-# 		print('static method')
+#     @classmethod
+#     def c_foo(cls):
+#         print('class method')
 #
-# a = A()
-# a.foo()
-# a.c_foo()
+#     @staticmethod
+#     def s_foo():
+#         print('static method')
+#
+# b = A(25)
+# b.foo()
+# b.c_foo()
 # a.s_foo()
 # A.c_foo()
 # A.s_foo()
@@ -211,7 +213,7 @@ class Pow2(object):
 
 			这样会产生闭包问题这里列表append的是一个函数并没有运行,这个时候我们下面
 			for循环运行这个函数会让其中的每个_函数运行,这个时候运行函数时里面的i值就是
-			9了
+			9了,闭包引用一定要引用外部变量，如果直接在内部定义变量的话那么就不算是闭包了
 
 			解决方法传入默认参数就行了(i=i)将变量拷贝到作用域中
 
@@ -235,34 +237,34 @@ class Pow2(object):
 			我写了一个例子来看一下
 '''
 
-
-def simple_wrapper(fn):
-    def _():
-        print(fn.__name__)
-        return fn
-    return _
-
-
-def fix_arg_wrapper(fn):
-    def _(x):
-        print(x)
-        return fn()
-    return _
-
-
-def all_args_wrapper(fn):
-    def _(*args, **kward):
-        print(*args, **kward)
-        return fn(*args, **kward)
-    return _
-
-
-@all_args_wrapper
-def foo(a, b, c, d, f=1):
-    pass
-
-
-foo(1, 2, 3, 4, f=1)
+#
+# def simple_wrapper(fn):
+#     def _():
+#         print(fn.__name__)
+#         return fn
+#     return _
+#
+#
+# def fix_arg_wrapper(fn):
+#     def _(x):
+#         print(x)
+#         return fn()
+#     return _
+#
+#
+# def all_args_wrapper(fn):
+#     def _(*args, **kward):
+#         print(*args, **kward)
+#         return fn(*args, **kward)
+#     return _
+#
+#
+# @all_args_wrapper
+# def foo(a, b, c, d, f=1):
+#     pass
+#
+#
+# foo(1, 2, 3, 4, f=1)
 '''
 				def simple_wrapper(fn):
 					def _():
@@ -349,8 +351,11 @@ foo(1, 2, 3, 4, f=1)
 
         匿名函数版本
         counters = [1, 2, 3, 4]
+        couns = [1, 2, 3, 5]
         list(map(lambda x: x + 10), counters))
         输出： [11, 12, 13, 14]
+        list(map(lambda x, y: x + 10 + y), counters, couns))
+        输出： [12, 14, 16, 19]
     在函数嵌套中使用lambda可以很方便的接收到上面函数传入的数据
 
     filter:
@@ -371,7 +376,7 @@ foo(1, 2, 3, 4, f=1)
         三个内置函数都是对待一个可迭代对象以及集合结果中的各项应用于另外一个函数。
         map 把每一项传递给函数并收集结果
         filter 收集那些函数返回一个 True值的项
-        reduce 通过对一个累加器和后续想应用函数来计算一个单个的值。(而且不是内置函数需要导入模块才能够使用)
+        reduce 通过对一个累加器和后续向应用函数来计算一个单个的值。(而且不是内置函数需要导入模块才能够使用)
 
 
 	模块：
@@ -418,4 +423,7 @@ foo(1, 2, 3, 4, f=1)
 # from functools import reduce
 # print(reduce((lambda x, y: x * y), [1, 2, 3, 4]))
 '''
-
+# counters = [1, 2, 3, 4]
+# couns = [1, 2, 3, 5]
+# r = list(map(lambda x, y: x + y + 10, couns, counters))
+# print(r)

@@ -46,6 +46,7 @@ MySQL的索引
 
 # 基操
 """
+MYSQL中索引从1开始
 字符串和日期用''括起来
 表名  列名  关键字不区分大小写
 但是关键字习惯的使用大写
@@ -59,10 +60,17 @@ MySQL的索引
         字符串，但是这里字符串创建的时候会给一个长度，如果没达到长度的话会给一个空格填充字符串
     VARCHAR(长度)
         可变长度的字符串，如果输入的东西没达到长度的话也不会增加空格进行填充
+    float(m,d)
+        m是数据长度,d是小数点后面的位数
 
     约束创建数据的时候也会有一些约束在的比如
         NOT NULL
         PRIMARY KEY (product_id)设置主键
+    NULL
+        is null 以外null的值不满足任何查找条件
+        如果null参与算数运算符则该表达式的值为null
+        如果null参与比较运算结果可以视为false
+        如果参与聚集运算，则除了count(*)以外都忽略null
 语句
     CREATE DATABASE (数据库名称)
     CREATE TABLE 表名(详细的每个列)
@@ -70,6 +78,9 @@ MySQL的索引
     ALTER TABLE 表名 ADD COLUMN 列的定义
     ALTER TABLE 表名 DROP COLUMN 列名
     INSERT INTO 表名 VALUES (数据)
+    
+DESC 表名 可以查询表的结构
+
 as 设置别名
     设置别名的时候可以使用中文但必须遵循下面的格式
         "你想指定的中文别名或者整数"
@@ -77,25 +88,22 @@ as 设置别名
 DISTINCT
     去掉一列中的所有重复行，NULL也被视为重复行只显示一个
 
-WHERE
-    紧跟在FROM后面
-    条件表达式用来过滤数据
-    先经过条件表达式得到行的备选结果，然后再从select的列数据中进行选择
-    WHERE sale_price - purchase_price >= 500
-    总之也能用这种东西很方便
-    不能使用聚合函数
-
+在进行查询之前先使用 USE 表名 来确定是对那个表进行的操作 
 
 运算表达式和比较运算符
     + - * / 和正常使用没有区别也可以用括号进行
+    + 这个符号在mysql中只当做普通运算符号使用 如果在select中你想要两列的结果合并 使用了 + 那么如果都为数字直接相加
+                                            如果其中有字符串那么mysql就会尝试将字符串转化为数字，如果可以转化例如'111'
+                                            那么转化成功后继续进行相加，如果字符不能转化的话就将字符的值设为 0 两边相加
     四则运算如果有NULL全部是NULL
     < <= > >= <>(不等于也可以用 !=)
 
 逻辑运算符:
     NOT,正常用法，可以使用在WHERE里面
     对于NULL这种特殊类型，不支持使用比较运算符的，可以使用人性化的方法比如 IS NULL  或者  IS NOT NULL
-    AND
-    OR
+    AND  等于  &&
+    OR   等于  ||
+    ！   等于  not
     使用方法和变成上面是一样的，但是有一个规则，AND优先级要大于OR
     A AND B OR C
     实际上是
@@ -110,6 +118,8 @@ WHERE
     '1' '11' '2' '222' '3'
     进行大小比较的时候也是按照这个来排序
 
+case函数
+    
 聚合函数
     可以在函数内部使用DISTINCT
     对于聚合函数在接收列名当做参数的时候就已经将NULL排除在外了所以可以进行计算。
@@ -117,62 +127,82 @@ WHERE
             比如说你有两行是NULL 那么就返回总行数-2。
     MIN
     MAX
-        原则上适用于所有类型
-    SUM
+        原则上适用于所有类型，并且忽略null值
+    SUM  
     AVG
-        一般适用于数值类型
+        一般适用于数值类型，并且忽略null值
     只有SELECT HAVING ORDER BY子句中可以使用聚合函数
 
+数学函数
+    ROUND(数字，保留位数)四舍五入，如果有第二个参数那么默认保留固定的位数
+    CEIL()向上取整返回大于等于该参数的最小整数
+    FLOOR()向下取整返回小于等于该参数的最大整数
+    TRUNCATE(数字，保留位数)截断按照位数截断前面的数字
+    MOD(，)取余
+
+日期:
+    日期格式请遵循
+        xxxx-yy-mm
+    NOW()返回系统日期和时间
+    Data():返回日期
+    Time():返回时间
+    下面的函数可以通过嵌套NOW来返回当前的年月,因为需要一个参数来
+    Year():返回 年
+    Month():返回 月
+    DATEDIFF(date1， date2) 判断两个日期相差的时间
+字符函数
+    LENGTH(参数)得到该列名的字节长度  这里注意一个英文字母占1个字节一个汉字占三个字节，这里的字节看编码格式
+    CONCAT(str1 str2.....)将多个字符串连接到一起，如果其中有一个字符串为空的话整个值返回一个空
+    UPPER(参数)  将内部的字符变成大写
+    LOWER(参数)  将内部的字符变成小写
+    SUBSTR(参数，start， end) 截取参数的start到end的字符如果end为空那么一直从start截取到结尾
+    INSTR(str1， str2)  从str1中找到str2的下标返回第一个对应字母的下标，如果没有返回0 
+    RTrim(): 去掉右空格
+    LTrim(): 去掉左空格
+    Trim(): 默认去掉两边空格 Trim('a' from 'aaabcdyhaaa')这样可以去两边的a
+    LPAD(str1, len, str2) 用str2来进行左填充str1到len长度 最终的长度肯定是len的
+    RPAD()和上面一样
+    REPLACE(主参数， 被替换字符， 替换字符)
+    Left(str, length): 从str字段从左截取length位
+    Right(str, length): 从str字段从右截取length位
+    Abs(): 绝对值
+
 其余函数
-    ABS(0)
-    MOD()
-    ROUND()
-    LENGTH()
-    LOWER()
-    REPLACE()
-    SUBSTRING()
-    UPPER()
-    CURRENT_DATE()
-    CURRENT_TIME(0)
-    CURRENT_TIMESTAMP
+    IFNULL(列名， 如果为NULL你想要返回的值)
+    
+    LENGTH(列名)得到该列名的长度
 
+    模糊查询
+        LIKE 是一种模糊查询的方法用来查询匹配字符串
+            LIKE 'DDD%'/'%DDD%'/'%DDD' 就是已经知道了三个字母是DDD 希望能够得到所有和这个匹配的数据 前中后都可以
+            %是代表任意多个字符可以包括0个 不能查询null如果有会返回空
+            使用 _ 也是模糊查询的方法,一个 _ 代表一个字符
+            转义字符 \ 可以转义 % _ 这种的东西使其变为普通字符
+            EXCAPE '字符'  这个函数可以将你指定的字符设定为转义字符 
+            可以使用 NOT LIKE 表示否定
+            BETWEEN AND
+                可以选择范围 例如 列名 BETWEEN 100 AND 120 这样就是选择100到120的范围  注意这两个值的大小顺序不能改变
+                如果是不在这个范围使用 前面加一个NOT就可以了
+            IN
+                WHERE job_id IN ('IT_PROT', 'AD_VP', 'AD_PRES');  查找job_id 中有这三个选项的值
+            isnull/is not null 字面意思的两个  因为null不能直接使用 = 来查询
+            <=> 安全等于  可以随便使用来进行查询     
 
+WHERE
+    紧跟在FROM后面
+    条件表达式用来过滤数据
+    先经过条件表达式得到行的备选结果，然后再从select的列数据中进行选择
+    WHERE sale_price - purchase_price >= 500
+    总之也能用这种东西很方便
+    不能使用聚合函数，因为WHERE是对每一个元组(行)进行操作的，而聚合函数是对集合进行操作的(列)
 
-
-
-
-
-
-
-
-
-
-
-    SELECT id, user_id, score, term
-    FROM ?
-    COURSE = '数学' AND (SELECT user_id
-                                FROM p2
-                                WHERE COURSE = '语文' AND score > 90 and p1.term = p2.term)
-
-
-   WHERE COURSE = '语文' AND score > 90 AND()
-
-
-
-
-
-
-
-
-
-
-
-
-
-    LIKE 是一种模糊查询的方法用来查询匹配字符串
-        LIKE 'DDD%'/'%DDD%'/'%DDD' 就是已经知道了三个字母是DDD 希望能够得到所有和这个匹配的数据 前中后都可以
-        使用 __ 也是模糊查询的方法但是确定了有几个字符的长度不像上面可以是无线长度的
 分组 GROUP BY
+    分组查询一般有两种筛选行为
+        分组前的筛选      原始表             where
+        分组后的筛选      分组后的结果集     having
+        分组函数进行筛选肯定是放在 having 中的
+        能有分组前筛选的优先使用分组前筛选
+        
     四个注意(聚合函数和GROUP BY)
         必须写在SELECT 子句中
         WHERE无法使用聚合函数
@@ -208,11 +238,35 @@ HAVING
         GROUP BY 指定的列
     书写顺序
         SELECT -> FROM -> WHERE -> ORDER BY -> HAVING
-    HAVING是对组进行操作
-    WHERE是对行进行操作
+    HAVING是对GROUP BY分成的组进行操作，相当于整个数据库已经被分成了几个小的块，在这中间做什么都可以
+    WHERE是对行进行操作，每一行都要进行检查
     有的时候对两个值进行不同的操作可以得到同样的结果，推荐使用WHERE，因为在使用聚合函数的时候内部会对行进行排序，
     这样的话行越少排序的负担越少，执行的也就越快。如果使用HAVING是在排序结束之后再进行分组，不能减轻排序的负担
     另外一个原因是使用WHERE可以对对应的列创建索引，大幅度提升速度。
+    -- 求不及格课程超过两门的同学的学号
+    SELECT S
+    FROM SC 
+    WHERE Score < 60
+    GROUP BY S
+    HAVING COUNT(*) > 2;
+    
+    -- 求有两门以上不及格课程同学的学号及平均成绩
+    SELECT S, AVG(Score)
+    FROM SC
+    WHERE S IN(
+        SELECT S
+        FROM SC
+        WHERE Score < 60
+        GROUP BY S
+        HAVING COUNT(*) > 2
+    )
+    GROUP BY S;
+    注意语义错误，如果使用下面的写法求出的是两门以上不及格课程同学的不及格课程的平均成绩
+    SELECT C
+    FROM SC
+    WHERE Score < 60
+    GROUP BY C
+    HAVING COUNT(*) > 10;
 
 ORDER BY
     一般写在末尾
@@ -221,11 +275,27 @@ ORDER BY
     如果有NULL的时候，一般会汇集在末尾或者开头
     ORDER BY可以使用别名,原因就是内部的语句执行顺序
     可以使用SELECT中不存在的列和聚合函数
+    可以多个列同时作为查询条件               列名 ASC, 列名, ASC;
     书写顺序
         SELECT -> FROM -> WHERE -> GROUP BY -> HAVING -> ORDER BY
     执行顺序
         FROM -> WHERE -> GROUP BY -> HAVING -> SELECT -> ORDER BY
+    LIMIT 是例外放在 ORDER BY 后面
 
+连接查询(多表连接)
+    SELECT x, y FROM xx, yy
+    这种情况会造成两个表进行一个笛卡尔积出现一个非常大的表，笛卡尔积请看数据库基础
+
+SQL实现交并差集
+    假设子查询1的元组出现m次，子查询2的元组出现n次
+    UNION 并         子查询1 UNION ALL  子查询2 出现m+n次
+    INTERSECT 交     子查询1 INTERSECT ALL  子查询2 出现 min(m,n)次
+    EXCEPT 差        子查询1 EXCEPT ALL   子查询2  出现max(0, m-n)次
+    使用方式
+        子查询{UNION[ALL] | INTERSECT[ALL] | EXCEPT[ALL] 子查询}
+        不带ALL的时候一般自动删除重复元组，带ALL的时候保留重复元组
+    个人认为可以认为是两个查询进行的操作，两个查询分别查出不同的结果表，然后进行交差并运算
+        
 INSERT:
     对于NULL也是一视同仁 直接插入就行了，注意是否会有NOT NULL约束
     设定默认值的时候DEFAULT 可以选择直接给该列赋值DEFAULT 或者直接不给这个列赋值，这样的话就是使用了默认值
@@ -234,12 +304,18 @@ INSERT:
         在插入的数据正好是全部列的数据的时候也可以省略列名，但是使用了列名的时候，数据和列名不能够不一致
     多行INSERT
         INSERT INTO 表名 (列名) VALUES (数据)，(数据)，(数据)这样可以省略INSERT INTO 只一行就插入多行数据。
+    子查询INSERT 插入所有及格的数据
+        INSERT INTO SCt(S, C, Score)
+        SELECT S, C, Score
+        FROM SC
+        WHERE Score >= 60;
 
 DELETE:
     可以使用DROP TABLE 表名 来删除表
     使用DELETE 来删除数据，因为DELETE删除的是行，所以没办法指定列名或者 *
         DELETE FROM 表名
-    使用WHERE来进行选择性删除
+    使用WHERE来进行选择性删除     删除所有学号为93080301的学生的数据
+        DELETE FROM SC WHERE S = '93080301'
     TRUNCATE
         也是一种删除的办法，但是这个是不可控的删除整个表的数据，所以运行的时候会快一点。使用的时候要谨慎
 
@@ -251,6 +327,81 @@ UPDATE:
         UPDATE 表名
         SET 列名 = 新的值，列名 = 新的值....
         WHERE 条件
+        
+ALTER
+    对表进行修改主要有下面三个函数
+        DROP 删除约束           删除下面一行的完整性约束
+            ALTER TABLE Student DROP  UNIQUE(Sname)
+        ADD 增加新列            增加 Sadder 和 PID 两列
+            ALTER TABLE Student ADD  Sadder CHAR(40), PID CHAR(10)
+        MODIFY 修改列           调整一下 Sname 的CHAR大小
+            ALTER TABLE Student MODIFY Sname CHAR(10)
+   
+子查询
+    IN 子查询   
+        -- 列出张三 王三的所有信息
+        SELECT *
+        FROM student
+        WHERE Sname = '张三' OR Sname = '王三';
+        -- 使用IN
+        SELECT * 
+        FROM student
+        WHERE Sname in ('张三', '王三');  
+        
+        -- 列出选修了001号课程的学生的学号和姓名
+        SELECT S.Sname, S.S
+        FROM student AS S, SC AS SC1
+        WHERE S.S = SC1.S AND SC1.C = '001';
+        -- 子查询形式
+        SELECT S.Sname, S.S
+        FROM student AS S
+        WHERE S.S IN (
+            SELECT SC.S
+            FROM SC
+            WHERE SC.C = '001'
+        );
+        
+        -- 列出没学过李明老师的课的所有同学的姓名
+        SELECT Sname
+        FROM student
+        WHERE S NOT IN (
+            SELECT S.S
+            FROM SC AS S, teacher AS T, course AS C
+            WHERE T.T = C.T AND C.C = S.C AND T.Tname = '李明'
+        );
+    ANY
+        any 可以与=、>、>=、<、<=、<>结合起来使用，分别表示等于、大于、大于等于、小于、小于等于、不等于其中的任何一个数据。
+        因为定义的模糊所以一般使用 some
+    ALL
+        all可以与=、>、>=、<、<=、<>结合是来使用，分别表示等于、大于、大于等于、小于、小于等于、不等于其中的其中的所有数据
+        -- 找出工资最低的教师的姓名
+        SELECT Tname 
+        FROM teacher
+        WHERE Salary <= ALL(
+            SELECT Salary
+            FROM teacher
+        );
+        -- 找出张三同学成绩最低的课程号
+        SELECT SC.C
+        FROM SC, student
+        WHERE SC.S = student.S AND student.Sname = '张三' AND SC.Score <= ALL(
+            SELECT Score
+            FROM SC
+            WHERE SC.S = student.S
+        )
+    SOME
+        目前看来使用方法和 any类似
+        -- 找出001号课成绩不是最高的所有学生的学号
+        SELECT S
+        FROM SC
+        WHERE C = '001' AND Score < some(
+            SELECT Score
+            FROM SC
+            WHERE C = '001' 
+        );
+    
+    = some(子查询)和 IN(子查询)是等价的
+    NOT IN 和 <>all等价
 
 事务
     事务都是用 事务开始语句和事务结束语句包起来的
@@ -260,16 +411,6 @@ UPDATE:
     在MySQL中一般都是自动提交事务的，写的一般语句都默认是已经被一个事务包裹，如果在自动提交的状态下DELETE了数据，那么
     就无法回滚了，必须要自己写一个ROLLBACK这样的事务才能回滚。
 
-数据库事务的四种特性
-    原子性:
-        事务的操作，要么全部执行，要么全部不执行，不能出现只执行一半的操作
-    一致性:
-        对于事物的操作要符合数据库的约束，如果出现了不符合约束的情况就把他回滚
-    隔离性:
-        对于一个事务而言，在他没有执行完之前对于其余的事务是透明的，别人无法干扰你的操作
-    持久性:
-        就是当事务提交或者回滚之后，能够保证数据可以持久的被保存住，一般都是在硬盘中记录日志来进行数据的持久化，
-        当发生故障的时候通过日志来进行数据的恢复
 
 视图
     视图就是将SELECT语句进行储存形成一个新的表，而且这个表会自动随着数据更新而更新，
@@ -362,20 +503,6 @@ UPDATE:
         检索出来的第一行是0行所以(1, 1)是第2行 行号是1
         表名也可以写得十分完整
 
-    order 排序语句:
-        按字母顺序排列
-            select 列名 from 表名 order by 列名
-
-        多行排序是和多行select是一样的
-
-        order by是后面的行按照第一行来进行排序
-            order by name, price
-            先排序name,然后price按照排序的name再排序。
-            如果name的值全部唯一那么price就不用再排序了
-
-        默认是升序排序desc是降序排序可以转换
-            select 列名 from 表名 order by 列名 desc
-            只对单列有效,多列要加多个desc
 
     WHERE 过滤条件:
         (位于order by之前)
@@ -427,41 +554,6 @@ UPDATE:
             +-*/四种运算符都可以使用
             SELECT prod_id, quantity * price AS expanded_price
             返回的列表中expanded_price是计算字段 quantity 和 price的乘积
-
-    函数:
-        RTrim(): 去掉右空格
-        LTrim(): 去掉左空格
-        Trim(): 去掉两边空格
-        Left(str, length): 从str字段从左截取length位
-        Right(str, length): 从str字段从右截取length位
-        Upper(): 全部大写
-        Lower(): 全部小写
-        Abs(): 绝对值
-
-    日期:
-        日期格式请遵循
-            xxxx-yy-mm
-        Data():返回日期
-        Time():返回时间
-        Year():返回 年
-        Month():返回 月
-
-    聚合函数:
-        COUNT(): 返回某列的行数
-            如果返回指定的列那么忽略NULL *例外返回所有值
-        AVG(): 返回某列的平均值
-            通过WHERE 语句也可以返回特定一行或者几行的平均值
-        SUM(): 返回某列值的总和
-        MAX(): 返回某列的最大值
-        MIN(): 返回某列的最小值
-            忽略NULL
-        获取不同的值:
-            DISTINCT
-            在上面进行聚合的时候默认参数其实是ALL的代表所有参数
-            但是可以指定DISTINCT 表示只选用不同的值
-            案例:
-                SELECT SUM(DISTINCT price)
-                FROM product;
 
     分组:
         (在WHERE之后, ORDER BY之前)
